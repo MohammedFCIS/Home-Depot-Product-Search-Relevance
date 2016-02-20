@@ -8,7 +8,7 @@ product_description <- tbl_df(read.csv("data/product_descriptions.csv",stringsAs
 # Read test data
 products_test <- tbl_df(read.csv("data/test.csv",stringsAsFactors = FALSE))
 
-#combine training and test data, Joining by: "product_uid"
+#combine training and test data, Joining by: c("id", "product_uid", "product_title", "search_term")
 product_training_test<- full_join(products_training,products_test)
 
 #combine test data and data combined at the previous steps,Joining by: c("product_uid")
@@ -20,4 +20,4 @@ products_attributes <- tbl_df(read.csv("data/attributes.csv",stringsAsFactors = 
 
 products_attributes <- products_attributes  %>%
                        filter(product_uid != 'NA') %>% #revmove null rows
-                       distinct(product_uid, name) #remove duplicates
+                       unite(property, c(name,value), sep = '$@$') #combine name and values columns
