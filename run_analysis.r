@@ -25,4 +25,7 @@ products_attributes <- products_attributes  %>%
 products_attributes <- aggregate(products_attributes$property ~ products_attributes$property, by=list(products_attributes$product_uid), FUN=paste, collapse="@@@@")
 
 #restore original names
-products_attributes <- products_attributes %>% rename(prdouct_uid = Group.1, property = `products_attributes$property`)
+products_attributes <- products_attributes %>% rename(product_uid = Group.1, property = `products_attributes$property`)
+
+#merge attributes with the main dataset
+product_all <- full_join(product_all, products_attributes)
