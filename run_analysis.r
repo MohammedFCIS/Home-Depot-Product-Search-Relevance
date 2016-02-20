@@ -23,3 +23,6 @@ products_attributes <- products_attributes  %>%
                        unite(property, c(name,value), sep = '$@$')   #combine name and values columns
 # group rows with the same id
 products_attributes <- aggregate(products_attributes$property ~ products_attributes$property, by=list(products_attributes$product_uid), FUN=paste, collapse="@@@@")
+
+#restore original names
+products_attributes <- products_attributes %>% rename(prdouct_uid = Group.1, property = `products_attributes$property`)
