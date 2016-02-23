@@ -20,7 +20,7 @@ products_attributes <- tbl_df(read.csv("data/attributes.csv",stringsAsFactors = 
 
 products_attributes <- products_attributes  %>%
                        filter(product_uid != 'NA') %>% #revmove null rows
-                       unite(property, c(name,value), sep = '$@$')   #combine name and values columns
+                       unite(property, c(name,value), sep = ';;')   #combine name and values columns
 # group rows with the same id
 products_attributes <- aggregate(products_attributes$property ~ products_attributes$property, by=list(products_attributes$product_uid), FUN=paste, collapse="@@@@")
 
