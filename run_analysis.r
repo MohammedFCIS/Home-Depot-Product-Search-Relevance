@@ -29,8 +29,11 @@ products_attributes <- products_attributes %>% rename(product_uid = Group.1, pro
 
 #generate new attribute fields and combine with 'product_all'
 source('attributesParser.R')
-products_new_attributes <- allProductsAttributesParser(products_attributes$property)
-products_attributes <- cbind(products_attributes, products_new_attributes)
+products_attributes <- mutate(products_attributes, bullets = sapply(property, FUN = bulletsParser),
+                                                   yeses = sapply(property, FUN = yesesParser),
+                                                   nos = sapply(property, FUN = nosParser),
+                                                   keys = sapply(property, FUN = keysParser),
+                                                   values = sapply(property, FUN = valuesParser))
 
 #merge attributes with the main dataset
 product_all <- full_join(product_all, products_attributes)
