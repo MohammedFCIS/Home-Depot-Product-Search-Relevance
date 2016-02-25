@@ -27,5 +27,10 @@ products_attributes <- aggregate(products_attributes$property ~ products_attribu
 #restore original names
 products_attributes <- products_attributes %>% rename(product_uid = Group.1, property = `products_attributes$property`)
 
+#generate new attribute fields and combine with 'product_all'
+source('attributesParser.R')
+products_new_attributes <- allProductsAttributesParser(products_attributes$property)
+products_attributes <- cbind(products_attributes, products_new_attributes)
+
 #merge attributes with the main dataset
 product_all <- full_join(product_all, products_attributes)
