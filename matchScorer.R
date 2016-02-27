@@ -116,11 +116,11 @@ phrasesMatchScore <- function(query, target) {
 #       }
 #       queryMatchScores[i] <- maxScore
     }
+    
+    ## compute the final matching score between query and target as an aggregation of the values in 'queryMatchScores'
+    result <- mean(queryMatchScores)            # average of scores of the query words
+    #result <- 1 - prod(1 - queryMatchScores)    # assumes the scores of the query words are in the range [0,1]
   }
-  
-  ## compute the final matching score between query and target as an aggregation of the values in 'queryMatchScores'
-  result <- mean(queryMatchScores)            # average of scores of the query words
-  #result <- 1 - prod(1 - queryMatchScores)    # assumes the scores of the query words are in the range [0,1]
   
   result
 }
