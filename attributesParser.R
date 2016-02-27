@@ -1,24 +1,9 @@
 library(dplyr)
-library(gdata)
 
 #-----------------------------------------------------------------
 
-## Parses attributes & generate new attribute fields for all products
-allProductsAttributesParser <- function(all_products_attributes) {
-  
-  ## change input column to data frame
-  all_products_attributes <- as.data.frame(all_products_attributes)
-
-  ## generate new fields for all the rows & stack them on top of each other in order
-  df <- NULL
-  for (i in 1:nrow(all_products_attributes)) {
-    currRow <- singleProductAttributesParser(as.character(all_products_attributes[i,]))
-    df <- rbind(df, currRow)
-  }
-  
-  df
-
-}
+# REMOVE LEADING/TRAILING WHITESPACES
+trim <- function (x) gsub("^\\s+|\\s+$", "", x)
 
 #-----------------------------------------------------------------
 
@@ -35,6 +20,10 @@ attributesSplitter <- function(single_product_attributes) {
   ## separate the only column in the data frame into 2 columns: "key" & "value"
   single_product_attributes <- separate(single_product_attributes, col = "attr_key_val", remove = TRUE, sep = ";;", into = c('key','value'))
 
+  ## trim all attributes' keys and values
+  single_product_attributes$key   <- sapply(single_product_attributes$key,   trim)
+  single_product_attributes$value <- sapply(single_product_attributes$value, trim)
+
   single_product_attributes
 
 }
@@ -47,8 +36,8 @@ bulletsParser <- function(single_product_attributes) {
   single_product_attributes <- attributesSplitter(single_product_attributes)
   
   ## BULLETS
-  bullets_rows <- single_product_attributes[startsWith(single_product_attributes$key, "Bullet"),]
-  bullets <- paste(bullets_rows$value, collapse = "")
+  bullets_rows <- single_product_attributes["Bullet" == substr(single_product_attributes$key, 1, 6),]
+  bullets <- paste(bullets_rows$value, collapse = " ")
 
   bullets
 
@@ -62,8 +51,8 @@ yesesParser <- function(single_product_attributes) {
   single_product_attributes <- attributesSplitter(single_product_attributes)
   
   ## YES
-  yeses_rows <- single_product_attributes[startsWith(single_product_attributes$value, "Yes"),]
-  yeses <- paste(yeses_rows$key, collapse = "")
+  yeses_rows <- single_product_attributes["Yes" == substr(single_product_attributes$value, 1, 3),]
+  yeses <- paste(yeses_rows$key, collapse = " ")
   
   yeses
   
@@ -77,8 +66,8 @@ nosParser <- function(single_product_attributes) {
   single_product_attributes <- attributesSplitter(single_product_attributes)
   
   ## NO
-  nos_rows <- single_product_attributes[startsWith(single_product_attributes$value, "No"),]
-  nos <- paste(nos_rows$key, collapse = "")
+  nos_rows <- single_product_attributes["No" == substr(single_product_attributes$value, 1, 2),]
+  nos <- paste(nos_rows$key, collapse = " ")
   
   nos
   
@@ -92,15 +81,15 @@ keysParser <- function(single_product_attributes) {
   single_product_attributes <- attributesSplitter(single_product_attributes)
   
   ## all the rows that will be excluded
-  bullets_rows <- single_product_attributes[startsWith(single_product_attributes$key, "Bullet"),]
-  yeses_rows <- single_product_attributes[startsWith(single_product_attributes$value, "Yes"),]
-  nos_rows <- single_product_attributes[startsWith(single_product_attributes$value, "No"),]
+  bullets_rows <- single_product_attributes["Bullet" == substr(single_product_attributes$key,   1, 6),]
+  yeses_rows   <- single_product_attributes["Yes"    == substr(single_product_attributes$value, 1, 3),]
+  nos_rows     <- single_product_attributes["No"     == substr(single_product_attributes$value, 1, 2),]
   
   ## rows to be kept
   remaining_rows <- subset(single_product_attributes, !(key %in% rbind(bullets_rows, yeses_rows, nos_rows)$key))
 
   ## KEY
-  keys <- paste(remaining_rows$key, collapse = "")
+  keys <- paste(remaining_rows$key, collapse = " ")
 
 }
 
@@ -112,48 +101,17 @@ valuesParser <- function(single_product_attributes) {
   single_product_attributes <- attributesSplitter(single_product_attributes)
   
   ## all the rows that will be excluded
-  bullets_rows <- single_product_attributes[startsWith(single_product_attributes$key, "Bullet"),]
-  yeses_rows <- single_product_attributes[startsWith(single_product_attributes$value, "Yes"),]
-  nos_rows <- single_product_attributes[startsWith(single_product_attributes$value, "No"),]
+  bullets_rows <- single_product_attributes["Bullet" == substr(single_product_attributes$key,   1, 6),]
+  yeses_rows   <- single_product_attributes["Yes"    == substr(single_product_attributes$value, 1, 3),]
+  nos_rows     <- single_product_attributes["No"     == substr(single_product_attributes$value, 1, 2),]
   
   ## rows to be kept
   remaining_rows <- subset(single_product_attributes, !(key %in% rbind(bullets_rows, yeses_rows, nos_rows)$key))
   
   ## KEY
-  values <- paste(remaining_rows$value, collapse = "")
+  values <- paste(remaining_rows$value, collapse = " ")
   
 }
-
-#-----------------------------------------------------------------
-
-# ## Obtains the values for the new attribute fields for single product
-# singleProductAttributesParser <- function(single_product_attributes) {
-#   
-#   ## split attributes from one another
-#   single_product_attributes <- attributesSplitter(single_product_attributes)
-# 
-#   ## BULLETS
-#   bullets_rows <- single_product_attributes[startsWith(single_product_attributes$key, "Bullet"),]
-#   bullets <- paste(bullets_rows$value, collapse = " ")
-# 
-#   ## YES
-#   yeses_rows <- single_product_attributes[startsWith(single_product_attributes$value, "Yes"),]
-#   yeses <- paste(yeses_rows$key, collapse = " ")
-# 
-#   ## NO
-#   nos_rows <- single_product_attributes[startsWith(single_product_attributes$value, "No"),]
-#   nos <- paste(nos_rows$key, collapse = " ")
-#   
-#   ## REMAINING
-#   remaining_rows <- subset(single_product_attributes, !(key %in% rbind(bullets_rows, yeses_rows, nos_rows)$key))
-#   keys <- paste(remaining_rows$key, collapse = " ")
-#   values <- paste(remaining_rows$value, collapse = " ")
-# 
-#   result <- data.frame(bullets, yeses, nos, keys, values)
-# 
-#   result
-# 
-# }
 
 #-----------------------------------------------------------------
   

@@ -27,6 +27,8 @@ products_attributes <- aggregate(products_attributes$property ~ products_attribu
 #restore original names
 products_attributes <- products_attributes %>% rename(product_uid = Group.1, property = `products_attributes$property`)
 
+#---------------------------------
+
 #generate new attribute fields and combine with 'product_all'
 source('attributesParser.R')
 products_attributes <- mutate(products_attributes, bullets = sapply(property, FUN = bulletsParser),
@@ -37,3 +39,27 @@ products_attributes <- mutate(products_attributes, bullets = sapply(property, FU
 
 #merge attributes with the main dataset
 product_all <- full_join(product_all, products_attributes)
+
+#---------------------------------
+
+#generate the features that will be used in linear regression later
+source('matchScorer.R')
+product_all <- mutate(product_all, bulletsScore = mapply(phrasesMatchScore, search_term, bullets),
+                                   yesesScore   = mapply(phrasesMatchScore, search_term, yeses),
+                                   nosScore     = mapply(phrasesMatchScore, search_term, nos),
+                                   keysScore    = mapply(phrasesMatchScore, search_term, keys),
+                                   valuesScore  = mapply(phrasesMatchScore, search_term, values))
+
+# divide the data into training and test sets
+product_all_train <- subset(product_all, !is.na(relevance))
+product_all_test  <- subset(product_all, is.na(relevance))
+
+#linear regression
+RegModel = lm(relevance ~ bulletsScore + yesesScore + nosScore + keysScore + valuesScore, data = product_all_train)
+TestPredictions = predict(RegModel, newdata = product_all_test)
+
+summary(RegModel)
+
+# write prediction to file
+write.csv(TestPredictions, file = "test_set_predictions.csv")
+
