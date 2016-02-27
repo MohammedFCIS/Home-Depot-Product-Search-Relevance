@@ -1,0 +1,396 @@
+---
+title: "Springboard Capstone Project - Milestone Check-in"
+author: "/mohammed"
+date: "February 27, 2016"
+output: html_document
+---
+
+#Overview
+
+Home Depot Product Search Relevance is Kaggle competition targets to improve Home Depot customers' shopping experience by developing a model that can accurately predict the relevance of search results.
+
+Search relevancy is an implicit measure Home Depot uses to gauge how quickly they can get customers to the right products. Currently, human raters evaluate the impact of potential changes to their search algorithms, which is a slow and subjective process. By removing or minimizing human input in search relevance evaluation, the target is to predict the relevance for each pair listed in the test set. Given that the test set contains both seen and unseen search terms.
+
+#The Data
+
+This data set contains a number of products and real customer search terms from Home Depot's website. The challenge is to predict a relevance score for the provided combinations of search terms and products.
+
+The relevance is a number between 1 (not relevant) to 3 (highly relevant). For example, a search for "AA battery" would be considered highly relevant to a pack of size AA batteries (relevance = 3), mildly relevant to a cordless drill battery (relevance = 2), and not relevant to a snow shovel (relevance = 1).
+Let us explore the data together.
+## Main product data
+
+```{r, echo=FALSE}
+suppressMessages(library(reader))
+suppressMessages(library(dplyr))
+suppressMessages(library(tidyr))
+suppressMessages(library(ggplot2)) 
+```
+Which include the following files:
+
+- **train.csv** --> the training set, contains products, searches, and relevance scores.
+
+- **test.csv** --> the test set, data will be used to submitting to the Kaggle competition.
+ 
+```{r}
+# Read training data first
+products_training <- tbl_df(read.csv("data/train.csv", stringsAsFactors = FALSE))
+# Have a quick glimpese on it
+glimpse(products_training)
+```
+### Relevance Distribution
+```{r}
+# Read relevance data
+relevance_dist <- products_training %>% count(as.factor(relevance))  %>% arrange(desc(n))
+relevance_dist
+#Let us explore the distribution
+ggplot(products_training, aes(x = relevance)) +
+   geom_histogram(color = "black", fill = "DarkOrange") +
+  scale_x_continuous(breaks = seq(0, 3, 0.2))
+```
+
+```{r}
+# Desnisty function
+ggplot(products_training, aes(x = relevance)) +
+   geom_density(color = "black") +
+  scale_x_continuous(breaks = seq(0, 3, 0.2))
+```
+
+Looks like most search terms could score relevance score of **3** and a little of **1.25**.
+```{r}
+# Now we can read test data
+products_test <- tbl_df(read.csv("data/test.csv",stringsAsFactors = FALSE))
+```
+
+```{r}
+#combine training and test data, Joining by: c("id", "product_uid", "product_title", "search_term")
+suppressMessages(product_training_test<- full_join(products_training,products_test))
+```
+
+```{r}
+# Read product description
+product_description <- tbl_df(read.csv("data/product_descriptions.csv",stringsAsFactors = FALSE))
+glimpse(product_description)
+#combine test data and data combined at the previous steps,Joining by: c("product_uid")
+suppressMessages(product_all <- right_join(product_training_test, product_description))
+#data after merging training, test and description datasets
+glimpse(product_all)
+```
+### Let us figure out the most search term used
+```{r}
+#Now let us find out the most searched terms
+product_all %>% count(search_term)  %>% arrange(desc(n))
+#Let us have a nice histogram about it
+
+```
+### Let us figure out the most searched product
+```{r}
+product_all %>% count(product_uid)  %>% arrange(desc(n))
+
+```
+
+```{r}
+#Read the attributes of products
+products_attributes <- tbl_df(read.csv("data/attributes.csv",stringsAsFactors = FALSE, na.strings = 'N/A'))
+glimpse(products_attributes)
+```
+
+```{r}
+products_attributes <- products_attributes  %>%
+                       filter(product_uid != 'NA') %>% #revmove null rows
+                       unite(property, c(name,value), sep = ';;')   #combine name and values columns
+glimpse(products_attributes)
+```
+
+```{r}
+# group rows with the same id
+products_attributes <- aggregate(products_attributes$property ~ products_attributes$property, by=list(products_attributes$product_uid), FUN=paste, collapse="@@@@")
+glimpse(products_attributes)
+```
+
+```{r}
+#restore original names
+products_attributes <- products_attributes %>% rename(product_uid = Group.1, property = `products_attributes$property`)
+glimpse(products_attributes)
+```
+#To Do Next
+Join attributes dataset with the whole set and generate the features that will be used in linear regression later and explore these features 
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
