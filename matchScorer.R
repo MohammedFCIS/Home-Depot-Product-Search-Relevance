@@ -1,6 +1,5 @@
 library(qualV)
 library(stringi)
-library(stringdist)
 
 #-----------------------------------------------------------------
 
@@ -49,8 +48,8 @@ wordsMatchScore <- function(a, b) {
   ## obtain longest common subseqeunce
   lc_subseq <- longestCommonSubsequence(a, b)
 
-  ratio1 <- length(lc_subseq) / length(a)   ## amount of match with first word
-  ratio2 <- length(lc_subseq) / length(b)   ## amount of match with second word
+  ratio1 <- nchar(lc_subseq) / nchar(a)   ## amount of match with first word
+  ratio2 <- nchar(lc_subseq) / nchar(b)   ## amount of match with second word
   result <- max(ratio1, ratio2)
 
   result
@@ -66,32 +65,57 @@ wordsMatchScore <- function(a, b) {
 
 #-----------------------------------------------------------------
 
+# REMOVE LEADING/TRAILING WHITESPACES
+trim <- function (x) gsub("^\\s+|\\s+$", "", x)
+
+#-----------------------------------------------------------------
+
 # MATCH SCORE
 phrasesMatchScore <- function(query, target) {
-  ## split words of 'query' into a vector of words
-  query <- unlist(strsplit(query, split = " "))
+  if (is.na(query) || is.na(target)) {
+    #print(print(paste("query", query)))
+    #print(print(paste("target", target)))
+    result <- 0
+  }
+  else if (trim(query) == "" || trim(target) == "") {
+    #print(print(paste("query", query)))
+    #print(print(paste("target", target)))
+    result <- 0
+  }
+  else {
+    ## TRIM!
+    query <- trim(query)
+    target <- trim(target)
 
-  ## split words of 'target' into a vector of words
-  target <- unlist(strsplit(target, split = " "))
+    ## split words of 'query' into a vector of words
+    query <- unlist(strsplit(query, split = " "))
+    query <- query[is.na(match(query, ""))]     # remove empty strings
   
-  ## loop over query words and get their match scores
-  queryMatchScores <- NULL
-  for (i in 1:length(query)) {
-    ## current query word
-    currentQueryWord <- query[i]
+    ## split words of 'target' into a vector of words
+    target <- unlist(strsplit(target, split = " "))
+    target <- target[is.na(match(target, ""))]  # remove empty strings
+    
+    ## loop over query words and get their match scores
+    queryMatchScores <- replicate(expr = 0, n = length(query))
+    for (i in 1:length(query)) {
+      ## current query word
+      currentQueryWord <- query[i]
+      
+      ## record maximum match score for 'currentQueryWord':  
+      ## loop over target words and get the one that gives the maximum match score with 'currentQueryWord'
+      queryMatchScores[i] <- max(sapply(target, function(x){wordsMatchScore(currentQueryWord, x)}))
 
-    ## loop over target words and get the one that gives the maximum match score with 'currentQueryWord'
-    maxScore <- -1
-    for (j in 1:length(target)) {
-      ## current target word
-      currentTargetWord <- target[j]
-
-      ## compute match score and store it if higher than what is currently stored in 'maxScore'
-      maxScore <- max(maxScore, wordsMatchScore(currentQueryWord, currentTargetWord))
+#       ## verbose & slower equivalent of above line
+#       maxScore <- -1
+#       for (j in 1:length(target)) {
+#         ## current target word
+#         currentTargetWord <- target[j]
+#   
+#         ## compute match score and store it if higher than what is currently stored in 'maxScore'
+#         maxScore <- max(maxScore, wordsMatchScore(currentQueryWord, currentTargetWord))
+#       }
+#       queryMatchScores[i] <- maxScore
     }
-
-    ## record maximum match score for 'currentQueryWord'
-    queryMatchScores <- append(queryMatchScores, maxScore)
   }
   
   ## compute the final matching score between query and target as an aggregation of the values in 'queryMatchScores'
