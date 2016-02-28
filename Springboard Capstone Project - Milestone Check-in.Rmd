@@ -1,5 +1,5 @@
 ---
-title: "Springboard Capstone Project - Milestone Check-in"
+title: "Springboard Capstone Project - Final"
 author: "/mohammed"
 date: "February 27, 2016"
 output: html_document
@@ -24,6 +24,7 @@ suppressMessages(library(reader))
 suppressMessages(library(dplyr))
 suppressMessages(library(tidyr))
 suppressMessages(library(ggplot2)) 
+suppressMessages(library(gridExtra))
 ```
 Which include the following files:
 
@@ -112,48 +113,114 @@ glimpse(products_attributes)
 products_attributes <- products_attributes %>% rename(product_uid = Group.1, property = `products_attributes$property`)
 glimpse(products_attributes)
 ```
-#To Do Next
-Join attributes dataset with the whole set and generate the features that will be used in linear regression later and explore these features 
+#Generate new attribute fields and combine with 'product_all' 
 ```{r}
-
+source('attributesParser.R')
+products_attributes <- mutate(products_attributes, bullets = sapply(property, FUN = bulletsParser),
+                                                   yeses = sapply(property, FUN = yesesParser),
+                                                   nos = sapply(property, FUN = nosParser),
+                                                   keys = sapply(property, FUN = keysParser),
+                                                   values = sapply(property, FUN = valuesParser))
 ```
 
 ```{r}
-
+#merge attributes with the main dataset
+product_all <- full_join(product_all, products_attributes)
+```
+#Generate the features that will be used in linear regression
+```{r}
+source('matchScorer.R')
+product_all <- mutate(product_all, bulletsScore = mapply(phrasesMatchScore, search_term, bullets),
+                                   yesesScore   = mapply(phrasesMatchScore, search_term, yeses),
+                                   nosScore     = mapply(phrasesMatchScore, search_term, nos),
+                                   keysScore    = mapply(phrasesMatchScore, search_term, keys),
+                                   valuesScore  = mapply(phrasesMatchScore, search_term, values))
+```
+# Divide the data into training and test sets
+We divide the dataset back so can perform prediction and test our model
+```{r}
+product_all_train <- subset(product_all, !is.na(relevance))
+product_all_test  <- subset(product_all, is.na(relevance))
+```
+#Performing linear regression
+```{r}
+RegModel = lm(relevance ~ bulletsScore + yesesScore + nosScore + keysScore + valuesScore, data = product_all_train)
+TestPredictions = predict(RegModel, newdata = product_all_test)
+```
+#Test model investigation
+```{r}
+summary(RegModel)
 ```
 
+## Output Relevance Distribution
+```{r}
+# Read relevance data
+product_all_test$relevance <- as.numeric(TestPredictions)
+relevance_dist_final <- product_all_test %>% count(as.factor(relevance))  %>% arrange(desc(n))
+relevance_dist_final
+#Let us explore the distribution
+ggplot(product_all_test, aes(x = relevance)) +
+   geom_histogram(color = "black", fill = "DarkOrange", bins = 12) +
+  scale_x_continuous(breaks = seq(2, 3, 0.1))
+```
+
+* We could not help but notice that data is spread between **2.2** and **2.6** with max value is between **2.3** and **2.4**.
+* The data is, nearly, normally distributed with an outlier in **2.5**.
+
+Let us see another view
+```{r}
+# Desnisty function
+relecance_graph <- ggplot(product_all_test, aes(x = relevance)) +
+   geom_density(color = "black") +
+  scale_x_continuous(breaks = seq(2, 3, 0.2))
+```
+It confirms our previous induction.
+
+Let us now investigate the features used in the model to see their affect on the result
 ```{r}
 
+bullets_graph <- ggplot(product_all_test, aes(x = bulletsScore))+
+   geom_density(color = "black") +
+   scale_x_continuous()
+yeses_graph <- ggplot(product_all_test, aes(x = yesesScore))+
+   geom_density(color = "black") +
+   scale_x_continuous()
+nos_graph <- ggplot(product_all_test, aes(x = nosScore))+
+   geom_density(color = "black") +
+   scale_x_continuous()
+keys_graph <- ggplot(product_all_test, aes(x = keysScore))+
+   geom_density(color = "black") +
+   scale_x_continuous()
+values_graph <- ggplot(product_all_test, aes(x = valuesScore))+
+   geom_density(color = "black") +
+   scale_x_continuous()
+grid.arrange(bullets_graph, yeses_graph, nos_graph, keys_graph, values_graph, relecance_graph)
+
 ```
 
+It seems that the builets score is one affects the outlier.
+
+Now, let us investigate more by seeing what each feature behave against relevance
 ```{r}
+bullets_rel <- ggplot(product_all_test, aes(x = relevance, y = bulletsScore))+
+  geom_point()
 
+yeses_rel <- ggplot(product_all_test, aes(x = relevance, y = yesesScore))+
+  geom_point()
+
+nos_rel <- ggplot(product_all_test, aes(x = relevance, y = nosScore))+
+  geom_point()
+
+keys_rel <- ggplot(product_all_test, aes(x = relevance, y = keysScore))+
+  geom_point()
+
+values_rel <- ggplot(product_all_test, aes(x = relevance, y = valuesScore))+
+  geom_point()
+
+grid.arrange(bullets_rel, yeses_rel, nos_rel, keys_rel, values_rel)
 ```
 
-```{r}
-
-```
-
-```{r}
-
-```
-
-```{r}
-
-```
-
-```{r}
-
-```
-
-```{r}
-
-```
-
-```{r}
-
-```
-
+and it seems the value score the one drive the relevance
 ```{r}
 
 ```
