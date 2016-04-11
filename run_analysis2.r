@@ -48,9 +48,14 @@ fullPropertyCorpus <- tm_map(fullPropertyCorpus, removeWords,
                              stopwords('en'))
 fullPropertyCorpus <- tm_map(fullPropertyCorpus, removeNumbers)
 fullPropertyCorpus <- tm_map(fullPropertyCorpus, removeWords, c('x'))
-fullPropertyCorpus <- tm_map(fullPropertyCorpus, stemDocument)
-                            # c('::', '@', '|',';','.', '-', '&', '/','(', ')', 'x'))
-product_all$fullProperty_cleaned <- fullPropertyCorpus$content
+fullPropertyCorpus <- tm_map(fullPropertyCorpus, stripWhitespace)
+fullPropertyCorpus <- tm_map(fullPropertyCorpus, PlainTextDocument)  # Fix to avoid Error: inherits(doc, "TextDocument") is not TRUE
+rm_extra_char <- content_transformer(function(x, pattern) gsub(pattern, "", x))
+fullPropertyCorpus <- tm_map(fullPropertyCorpus, rm_extra_char, "[^[:alpha:][:space:]]")
+fullPropertyCorpus <- tm_map(fullPropertyCorpus, PlainTextDocument)  # Fix to avoid Error: inherits(doc, "TextDocument") is not TRUE
+fullPropertyCorpus <- tm_map(fullPropertyCorpus, stemDocument)# Must be after transforming into plain text document
+fullPropertyCorpus <- DocumentTermMatrix(fullPropertyCorpus)
+#product_all$fullProperty_cleaned <- fullPropertyCorpus$content
 
 #Cleaninig Search Term
 searchCorpus <- Corpus(VectorSource(product_all$search_term))
@@ -59,8 +64,11 @@ searchCorpus <- tm_map(searchCorpus, removePunctuation)
 searchCorpus <- tm_map(searchCorpus, removeWords, stopwords('en'))
 searchCorpus <- tm_map(searchCorpus, removeWords, c('x', '|'))
 searchCorpus <- tm_map(searchCorpus, removeNumbers)
+searchCorpus <- tm_map(searchCorpus, stripWhitespace)
+searchCorpus <- tm_map(searchCorpus, PlainTextDocument)  # Fix to avoid Error: inherits(doc, "TextDocument") is not TRUE
 searchCorpus <- tm_map(searchCorpus, stemDocument)
-product_all$search_term_cleaned <- searchCorpus$content
+searcFrequencies <- DocumentTermMatrix(searchCorpus)
+#product_all$search_term_cleaned <- searchCorpus$content
 
 ##########################################################
 ### Adding Features
