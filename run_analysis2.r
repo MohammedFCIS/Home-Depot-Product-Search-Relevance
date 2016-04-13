@@ -54,7 +54,10 @@ rm_extra_char <- content_transformer(function(x, pattern) gsub(pattern, "", x))
 fullPropertyCorpus <- tm_map(fullPropertyCorpus, rm_extra_char, "[^[:alpha:][:space:]]")
 fullPropertyCorpus <- tm_map(fullPropertyCorpus, PlainTextDocument)  # Fix to avoid Error: inherits(doc, "TextDocument") is not TRUE
 fullPropertyCorpus <- tm_map(fullPropertyCorpus, stemDocument)# Must be after transforming into plain text document
-fullPropertyCorpus <- DocumentTermMatrix(fullPropertyCorpus)
+fullPropertyCorpusFreq <- DocumentTermMatrix(fullPropertyCorpus)
+fullPropertyCorpusSparse <- removeSparseTerms(fullPropertyCorpusFreq, 0.995)
+fullPropertyCorpusSparseDF <- as.data.frame(as.matrix(fullPropertyCorpusSparse))#Could not do it for memory
+colnames(fullPropertyCorpusSparse) <- make.names(colnames(fullPropertyCorpusSparse))
 #product_all$fullProperty_cleaned <- fullPropertyCorpus$content
 
 #Cleaninig Search Term
@@ -68,6 +71,9 @@ searchCorpus <- tm_map(searchCorpus, stripWhitespace)
 searchCorpus <- tm_map(searchCorpus, PlainTextDocument)  # Fix to avoid Error: inherits(doc, "TextDocument") is not TRUE
 searchCorpus <- tm_map(searchCorpus, stemDocument)
 searcFrequencies <- DocumentTermMatrix(searchCorpus)
+searchSparse <- removeSparseTerms(searcFrequencies, 0.995)
+searchSparseDF <- as.data.frame(as.matrix(searchSparse))
+colnames(searchSparseDF) <- make.names(colnames(searchSparseDF))
 #product_all$search_term_cleaned <- searchCorpus$content
 
 ##########################################################
